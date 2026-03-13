@@ -220,6 +220,7 @@
         function salvarDespesa() { const v = parseFloat(document.getElementById('d-valor').value); if(v){ db.despesas.push({desc:document.getElementById('d-desc').value, valor:v}); salvar(); }}
         function entregarPedido(i) { db.pedidos[i].status = 'Entregue'; salvar(); }
         function excluir(t, i) { if(confirm("Apagar?")) { db[t].splice(i,1); salvar(); } }
+        function promoverUsuario(i) { db.usuarios[i].role = 'Diretor'; alert('Promovido!'); salvar(); }
         function criarNovoCargo() { const n = document.getElementById('role-name').value; const chks = document.querySelectorAll('.role-chk:checked'); if(n && chks.length){ db.cargos[n] = Array.from(chks).map(x => x.value); salvar(); renderizarCargos(); }}
         function renderizarCargos() {
             document.getElementById('perms-checkboxes').innerHTML = TELAS.map(t => `<label class="text-[9px] uppercase font-bold flex gap-2 border border-meth-900 p-2 rounded"><input type="checkbox" value="${t.id}" class="role-chk"> ${t.nome}</label>`).join('');
@@ -253,7 +254,26 @@
                 </div>`).join('');
 
             document.getElementById('lista-produtos').innerHTML = db.produtos.map((p,i) => `<div class="card-brba p-2 flex justify-between items-center text-[9px] uppercase"><span>${p.nome}</span><button onclick="excluir('produtos',${i})" class="text-red-900 font-bold">Remover</button></div>`).join('');
-            document.getElementById('lista-usuarios-admin').innerHTML = db.usuarios.map((u, i) => `<div class="card-brba p-3 flex justify-between items-center"><div class="text-[10px]"><p class="font-black text-white uppercase">${u.user}</p><p class="opacity-40 uppercase text-[8px]">${u.role}</p></div>${u.user!=='admin'?`<button onclick="excluir('usuarios',${i})" class="text-red-700 font-black text-[8px]">EXPULSAR</button>`:''}</div>`).join('');
+            
+            // Visualizar e Expulsar/Promover usuários
+            document.getElementById('lista-usuarios-admin').innerHTML = db.usuarios.map((u, i) => `
+                <div class="card-brba p-3 flex justify-between items-center">
+                    <div class="text-[10px]"><p class="font-black text-white uppercase">${u.user}</p><p class="opacity-40 uppercase text-[8px]">${u.role}</p></div>
+                    <div class="flex gap-2">
+                        ${u.user !== 'admin' && u.role === 'Cliente' ? `<button onclick="promoverUsuario(${i})" class="text-meth-400 font-black text-[8px] border border-meth-900 px-2 py-1 rounded">PROMOVER</button>` : ''}
+                        ${u.user !== 'admin' ? `<button onclick="excluir('usuarios',${i})" class="text-red-700 font-black text-[8px]">EXPULSAR</button>` : ''}
+                    </div>
+                </div>`).join('');
+            
+            // Visualizar e Apagar Gastos
+            document.getElementById('lista-despesas').innerHTML = db.despesas.map((d,i) => `
+                <div class="card-brba p-3 flex justify-between items-center text-[9px] uppercase">
+                    <span>${d.desc}</span>
+                    <div class="flex items-center gap-3">
+                        <span class="text-red-500 font-mono">$ ${d.valor}</span>
+                        <button onclick="excluir('despesas',${i})" class="text-red-900 font-bold">X</button>
+                    </div>
+                </div>`).join('');
             
             const f = db.pedidos.filter(p=>p.status==='Entregue').reduce((a,p)=>a+p.valor,0);
             const d = db.despesas.reduce((a,d)=>a+d.valor,0);
