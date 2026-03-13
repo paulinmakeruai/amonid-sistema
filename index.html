@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="pt-br" class="h-full dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMONID | Arquitetura Corporativa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        meth: { 400: '#4ade80', 600: '#16a34a', 900: '#063737', 950: '#021a1a' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Inter:wght@300;400;600;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #020909; color: #e2e8f0; scroll-behavior: smooth; }
+        .periodic-element { font-family: 'Courier Prime', monospace; background-color: #063737; border: 2px solid #4ade80; display: inline-block; padding: 2px 8px; font-weight: bold; color: #4ade80; }
+        .sidebar-link { display: flex; align-items: center; padding: 0.6rem 1rem; color: #64748b; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; border-left: 3px solid transparent; transition: 0.2s; width: 100%; text-align: left;}
+        .sidebar-link.active { color: #4ade80; background: rgba(22, 163, 74, 0.1); border-left-color: #4ade80; }
+        .tab-content { display: none; animation: blurIn 0.3s ease-out; }
+        .tab-content.active { display: block; }
+        @keyframes blurIn { from { opacity: 0; filter: blur(5px); } to { opacity: 1; filter: blur(0); } }
+        .card-brba { background: #051414; border: 1px solid #102a2a; border-radius: 4px; }
+        .form-input-brba { width: 100%; padding: 0.75rem; background-color: #020909; border: 1px solid #102a2a; color: #4ade80; font-family: 'Courier Prime', monospace; font-size: 0.875rem; }
+        .btn-brba { background-color: #063737; border: 1px solid #4ade80; color: #4ade80; padding: 0.75rem; font-weight: bold; text-transform: uppercase; font-size: 0.75rem; transition: 0.3s; cursor: pointer; }
+        .btn-brba:hover { background-color: #4ade80; color: #021a1a; }
+    </style>
+</head>
+<body class="h-full">
+
+    <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-black text-center p-4">
+        <div class="w-full max-w-[380px] p-8 card-brba border-t-4 border-t-meth-600">
+            <div class="periodic-element text-3xl mb-4">Am</div>
+            <h1 class="text-2xl font-black text-white uppercase tracking-widest">AMONID</h1>
+            <div class="space-y-4 mt-8">
+                <div id="reg-fields" class="hidden space-y-4">
+                    <input type="email" id="auth-email" placeholder="E-MAIL" class="form-input-brba">
+                    <input type="text" id="auth-phone" placeholder="TELEFONE (WhatsApp)" class="form-input-brba">
+                </div>
+                <input type="text" id="auth-user" placeholder="USUÁRIO" class="form-input-brba">
+                <input type="password" id="auth-pass" placeholder="CHAVE_ACESSO" class="form-input-brba">
+                <button onclick="autenticar()" class="w-full btn-brba">Inicializar</button>
+                <button onclick="alternarAuth()" id="btn-switch" class="text-[9px] text-slate-500 uppercase font-bold">Solicitar Credenciais</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-container" class="hidden flex h-full">
+        <aside class="w-64 bg-black border-r border-meth-900 flex flex-col h-full">
+            <div class="h-20 flex flex-col items-center justify-center border-b border-meth-900">
+                <div class="periodic-element text-sm mb-1">Am</div>
+                <span class="text-[10px] font-black text-meth-600 tracking-widest uppercase italic">Amonid</span>
+            </div>
+            <nav id="nav-links" class="flex-1 py-4 overflow-y-auto"></nav>
+            <div class="p-6 border-t border-meth-900">
+                <p id="user-display-name" class="text-xs font-black text-white uppercase"></p>
+                <p id="user-display-role" class="text-[9px] text-meth-400 font-bold mb-4"></p>
+                <button onclick="location.reload()" class="text-[10px] text-red-500 font-black uppercase">Encerrar Sessão</button>
+            </div>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto p-12">
+           
+            <section id="aba-intro-cliente" class="tab-content">
+                <div class="max-w-4xl mx-auto">
+                    <div id="intro-display-img-container" class="w-full h-72 mb-8 overflow-hidden rounded-lg card-brba">
+                        <img id="intro-display-img" src="" class="w-full h-full object-cover opacity-60">
+                    </div>
+                    <h2 id="intro-display-titulo" class="text-4xl font-black text-white uppercase mb-6 italic"></h2>
+                    <div id="intro-display-texto" class="text-lg text-slate-400 leading-relaxed mb-10 whitespace-pre-line font-light"></div>
+                    <button onclick="mudarAba('comunicacoes')" class="btn-brba px-12 italic">Seguir para Contatos</button>
+                </div>
+            </section>
+
+            <section id="aba-comunicacoes" class="tab-content">
+                <h2 class="text-2xl font-black text-white uppercase mb-8 italic tracking-widest">Canais de Acesso</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="card-brba p-8">
+                        <p class="text-[10px] font-bold text-meth-400 uppercase mb-4 tracking-widest">Localização</p>
+                        <h4 id="disp-endereco" class="text-xl font-bold text-white mb-4"></h4>
+                        <a id="link-maps" href="#" target="_blank" class="text-xs text-meth-400 font-bold underline uppercase">Abrir no Google Maps</a>
+                    </div>
+                    <div class="card-brba p-8">
+                        <p class="text-[10px] font-bold text-meth-400 uppercase mb-4 tracking-widest">Contato Direto</p>
+                        <div class="space-y-2">
+                            <p class="text-xs">WhatsApp: <span id="disp-zap" class="font-mono text-white"></span></p>
+                            <p class="text-xs">Email: <span id="disp-email" class="font-mono text-white"></span></p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="aba-config-comunic" class="tab-content">
+                <h2 class="text-2xl font-black text-white uppercase mb-8 italic">Configurar Contatos e Localização</h2>
+                <div class="card-brba p-8 space-y-4">
+                    <input type="text" id="edit-endereco" placeholder="Endereço da Empresa" class="form-input-brba">
+                    <input type="text" id="edit-maps" placeholder="Link do Google Maps" class="form-input-brba">
+                    <input type="text" id="edit-zap" placeholder="WhatsApp (ex: 5562999999999)" class="form-input-brba">
+                    <input type="text" id="edit-email-contato" placeholder="E-mail de Contato" class="form-input-brba">
+                    <button onclick="salvarComunicacoes()" class="btn-brba w-full py-4">Publicar Informações de Contato</button>
+                </div>
+            </section>
+
+            <section id="aba-catalogo" class="tab-content">
+                <h2 class="text-2xl font-black text-white uppercase mb-8 italic">Estoque Disponível</h2>
+                <div id="grid-catalogo" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+            </section>
+
+            <section id="aba-config-intro" class="tab-content"><h2 class="text-2xl font-black uppercase mb-8">Editar Início</h2><div class="card-brba p-8 space-y-4"><input type="text" id="edit-intro-titulo" class="form-input-brba" placeholder="Título"><input type="text" id="edit-intro-img" class="form-input-brba" placeholder="Link da Imagem"><textarea id="edit-intro-texto" class="form-input-brba h-48" placeholder="Texto de introdução"></textarea><button onclick="salvarIntroducao()" class="btn-brba w-full">Salvar Alterações</button></div></section>
+            
+            <section id="aba-financas" class="tab-content"><h2 class="text-2xl font-black uppercase mb-8 italic">Financeiro</h2><div class="grid grid-cols-3 gap-6 mb-8"><div class="card-brba p-6"><p class="text-[10px] uppercase">Faturamento</p><h3 id="faturamento-val" class="text-2xl font-black"></h3></div><div class="card-brba p-6"><p class="text-[10px] uppercase">Custos</p><h3 id="despesa-val" class="text-2xl font-black text-red-500"></h3></div><div class="card-brba p-6"><p class="text-[10px] uppercase">Lucro</p><h3 id="lucro-val" class="text-2xl font-black text-meth-400"></h3></div></div><div class="card-brba p-8 flex justify-center"><div class="w-64 h-64"><canvas id="chartFinanceiro"></canvas></div></div></section>
+            
+            <section id="aba-pedidos" class="tab-content"><h2 class="text-2xl font-black uppercase mb-8">Pedidos de Suprimento Ativos</h2><div id="grid-pedidos" class="space-y-4"></div></section>
+            
+            <section id="aba-produtos" class="tab-content"><h2 class="text-2xl font-black uppercase mb-8">Gerenciador de Estoque</h2><div class="card-brba p-6 mb-8 grid grid-cols-2 gap-4"><input type="text" id="p-nome" placeholder="Nome do Produto" class="form-input-brba"><input type="number" id="p-preco" placeholder="Preço" class="form-input-brba"><input type="text" id="p-img" placeholder="URL da Imagem" class="form-input-brba"><input type="text" id="p-qtd" placeholder="Quantidade em Estoque" class="form-input-brba"><textarea id="p-desc" class="form-input-brba col-span-2" placeholder="Descrição do Produto"></textarea><button onclick="salvarProduto()" class="btn-brba col-span-2">Adicionar ao Estoque</button></div><div id="lista-produtos" class="grid grid-cols-4 gap-4"></div></section>
+            
+            <section id="aba-usuarios" class="tab-content"><h2 class="text-2xl font-black uppercase mb-8">Identidades na Rede</h2><div class="card-brba overflow-hidden"><table class="w-full text-left text-xs"><tbody id="lista-usuarios-admin"></tbody></table></div></section>
+            
+            <section id="aba-config-cargos" class="tab-content"><h2 class="text-2xl font-black uppercase mb-8 italic">Ranks de Segurança</h2><div class="card-brba p-8 mb-8"><input type="text" id="role-name" placeholder="Nome do Rank" class="form-input-brba mb-4"><div id="perms-checkboxes" class="grid grid-cols-4 gap-4 mb-4"></div><button onclick="criarNovoCargo()" class="btn-brba w-full">Criar Rank</button></div><div id="lista-cargos-existentes" class="grid grid-cols-3 gap-6"></div></section>
+            
+            <section id="aba-despesas" class="tab-content"><h2 class="text-2xl font-black uppercase mb-8">Custos de Operação</h2><div class="card-brba p-4 flex gap-4 mb-8"><input type="text" id="d-desc" placeholder="Descrição da Despesa" class="form-input-brba flex-1"><input type="number" id="d-valor" placeholder="Valor" class="form-input-brba w-32"><button onclick="salvarDespesa()" class="btn-brba">Registrar</button></div><div id="lista-despesas" class="space-y-2"></div></section>
+        </main>
+    </div>
+
+    <script>
+        const TELAS = [
+            {id: 'intro-cliente', nome: 'Início'}, {id: 'comunicacoes', nome: 'Canais'}, {id: 'catalogo', nome: 'Catálogo'},
+            {id: 'financas', nome: 'Finanças'}, {id: 'despesas', nome: 'Despesas'},
+            {id: 'produtos', nome: 'Estoque'}, {id: 'pedidos', nome: 'Pedidos'},
+            {id: 'usuarios', nome: 'Rede'}, {id: 'config-cargos', nome: 'Ranks'},
+            {id: 'config-intro', nome: 'Config. Início'}, {id: 'config-comunic', nome: 'Config. Canais'}
+        ];
+
+        let db = JSON.parse(localStorage.getItem('amonid_final_v5')) || {
+            usuarios: [{user: 'admin', pass: '1234', email: 'adm@amonid.com', phone: '00', role: 'Diretor'}],
+            produtos: [], pedidos: [], despesas: [],
+            introducao: { titulo: 'SISTEMA OPERACIONAL AMONID', texto: 'Nossa pureza é o nosso padrão.', imagem: '' },
+            canais: { endereco: 'Senador Canedo, GO', maps: '', zap: '', email: 'contato@amonid.com' },
+            cargos: {
+                'Diretor': ['intro-cliente', 'comunicacoes', 'catalogo', 'financas', 'despesas', 'produtos', 'pedidos', 'usuarios', 'config-cargos', 'config-intro', 'config-comunic'],
+                'Cliente': ['intro-cliente', 'comunicacoes', 'catalogo']
+            }
+        };
+
+        let userAtivo = null;
+        let modoReg = false;
+        let myChart = null;
+
+        function salvar() { localStorage.setItem('amonid_final_v5', JSON.stringify(db)); renderizar(); }
+
+        function alternarAuth() { modoReg = !modoReg; document.getElementById('reg-fields').classList.toggle('hidden'); }
+
+        function autenticar() {
+            const u = document.getElementById('auth-user').value;
+            const p = document.getElementById('auth-pass').value;
+            if(modoReg) {
+                const n = { user:u, pass:p, email:document.getElementById('auth-email').value, phone:document.getElementById('auth-phone').value, role: 'Cliente' };
+                db.usuarios.push(n); userAtivo = n; entrar();
+            } else {
+                const conta = db.usuarios.find(x => x.user === u && x.pass === p);
+                if(conta) { userAtivo = conta; entrar(); } else { alert("Acesso Negado."); }
+            }
+        }
+
+        function entrar() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('app-container').classList.remove('hidden');
+            document.getElementById('user-display-name').innerText = userAtivo.user;
+            document.getElementById('user-display-role').innerText = userAtivo.role;
+            montarMenu();
+            salvar();
+        }
+
+        function montarMenu() {
+            const nav = document.getElementById('nav-links'); nav.innerHTML = '';
+            const perms = db.cargos[userAtivo.role] || ['intro-cliente', 'comunicacoes', 'catalogo'];
+            perms.forEach((id, i) => {
+                const info = TELAS.find(x => x.id === id);
+                if(info) nav.innerHTML += `<button onclick="mudarAba('${id}')" id="btn-${id}" class="sidebar-link ${i===0?'active':''}"><span>${info.nome}</span></button>`;
+            });
+            mudarAba(perms[0]);
+        }
+
+        function mudarAba(aba) {
+            document.querySelectorAll('.tab-content').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.sidebar-link').forEach(b => b.classList.remove('active'));
+            document.getElementById('aba-'+aba).classList.add('active');
+            if(document.getElementById('btn-'+aba)) document.getElementById('btn-'+aba).classList.add('active');
+            if(aba === 'financas') atualizarGrafico();
+            if(aba === 'config-cargos') renderizarCargos();
+            if(aba === 'config-intro') { document.getElementById('edit-intro-titulo').value = db.introducao.titulo; document.getElementById('edit-intro-texto').value = db.introducao.texto; document.getElementById('edit-intro-img').value = db.introducao.imagem; }
+            if(aba === 'config-comunic') { document.getElementById('edit-endereco').value = db.canais.endereco; document.getElementById('edit-maps').value = db.canais.maps; document.getElementById('edit-zap').value = db.canais.zap; document.getElementById('edit-email-contato').value = db.canais.email; }
+        }
+
+        function salvarIntroducao() { db.introducao = { titulo: document.getElementById('edit-intro-titulo').value, texto: document.getElementById('edit-intro-texto').value, imagem: document.getElementById('edit-intro-img').value }; salvar(); alert("Início atualizado."); }
+        function salvarComunicacoes() { db.canais = { endereco: document.getElementById('edit-endereco').value, maps: document.getElementById('edit-maps').value, zap: document.getElementById('edit-zap').value, email: document.getElementById('edit-email-contato').value }; salvar(); alert("Contatos atualizados."); }
+
+        function salvarProduto() { const n = document.getElementById('p-nome').value; if(n){ db.produtos.push({nome:n, preco:parseFloat(document.getElementById('p-preco').value), img:document.getElementById('p-img').value, qtd:document.getElementById('p-qtd').value, desc:document.getElementById('p-desc').value}); salvar(); alert("Produto salvo."); }}
+        
+        function solicitarPedido(n, p) {
+            db.pedidos.push({prod:n, cli:userAtivo.user, zapCli: userAtivo.phone, valor:p, status:'Pendente', data:new Date().toLocaleDateString()});
+            alert("Solicitação enviada."); salvar();
+        }
+        
+        function salvarDespesa() { const v = parseFloat(document.getElementById('d-valor').value); if(v){ db.despesas.push({desc:document.getElementById('d-desc').value, valor:v}); salvar(); alert("Despesa registrada."); }}
+        function entregarPedido(i) { db.pedidos[i].status = 'Entregue'; salvar(); }
+        function excluir(t, i) { if(confirm("Deseja excluir este item?")) { db[t].splice(i,1); salvar(); } }
+        
+        function criarNovoCargo() { const n = document.getElementById('role-name').value; const chks = document.querySelectorAll('.role-chk:checked'); if(n && chks.length){ db.cargos[n] = Array.from(chks).map(x => x.value); salvar(); renderizarCargos(); }}
+        function excluirCargo(c) { if(confirm("Revogar este Rank?")) { delete db.cargos[c]; db.usuarios.forEach(u => {if(u.role===c) u.role='Cliente';}); salvar(); renderizarCargos(); } }
+        
+        function renderizarCargos() {
+            document.getElementById('perms-checkboxes').innerHTML = TELAS.map(t => `<label class="text-[9px] uppercase font-bold flex gap-2"><input type="checkbox" value="${t.id}" class="role-chk"> ${t.nome}</label>`).join('');
+            document.getElementById('lista-cargos-existentes').innerHTML = Object.keys(db.cargos).map(c => `<div class="card-brba p-4 flex justify-between items-center text-xs"><span>${c}</span>${c!=='Diretor'&&c!=='Cliente' ? `<button onclick="excluirCargo('${c}')" class="text-red-500 font-bold uppercase">Revogar</button>` : ''}</div>`).join('');
+        }
+
+        function renderizar() {
+            document.getElementById('intro-display-titulo').innerText = db.introducao.titulo;
+            document.getElementById('intro-display-texto').innerText = db.introducao.texto;
+            document.getElementById('intro-display-img').src = db.introducao.imagem || 'https://via.placeholder.com/800x400/051414/4ade80?text=AMONID';
+            document.getElementById('disp-endereco').innerText = db.canais.endereco;
+            document.getElementById('link-maps').href = db.canais.maps || '#';
+            document.getElementById('disp-zap').innerText = db.canais.zap;
+            document.getElementById('disp-email').innerText = db.canais.email;
+
+            document.getElementById('grid-catalogo').innerHTML = db.produtos.map(p => `
+                <div class="card-brba overflow-hidden group">
+                    <img src="${p.img}" class="w-full h-40 object-cover opacity-50 group-hover:opacity-100 transition">
+                    <div class="p-5">
+                        <h4 class="font-black text-white text-sm uppercase">${p.nome}</h4>
+                        <p class="text-[10px] text-slate-500 mt-2 h-8 overflow-hidden">${p.desc}</p>
+                        <div class="flex justify-between items-center mt-4">
+                            <span class="text-meth-400 font-black">$ ${p.preco}</span>
+                            <button onclick="solicitarPedido('${p.nome}',${p.preco})" class="btn-brba px-4 py-1 text-[10px]">Solicitar</button>
+                        </div>
+                    </div>
+                </div>`).join('');
+
+            document.getElementById('grid-pedidos').innerHTML = db.pedidos.map((p,i) => `
+                <div class="card-brba p-4 flex justify-between items-center border-l-2 ${p.status==='Entregue'?'border-l-meth-400':'border-l-amber-600'}">
+                    <div class="font-mono"><p class="text-xs font-black text-white uppercase">${p.prod}</p><p class="text-[9px] text-slate-500">CLIENTE: ${p.cli} | ZAP: ${p.zapCli || 'N/A'}</p></div>
+                    <div class="flex gap-3">
+                        ${p.status==='Pendente' ? `
+                            <a href="https://wa.me/${p.zapCli}" target="_blank" class="bg-emerald-900 text-emerald-400 border border-emerald-400 px-3 py-1 text-[9px] font-black uppercase">Contatar</a>
+                            <button onclick="entregarPedido(${i})" class="btn-brba px-3 py-1 text-[9px]">Entregar</button>
+                        ` : ''}
+                        <button onclick="excluir('pedidos',${i})" class="text-red-900 font-black">X</button>
+                    </div>
+                </div>`).join('');
+
+            document.getElementById('lista-produtos').innerHTML = db.produtos.map((p,i) => `<div class="card-brba p-3 flex justify-between items-center text-[10px]"><span>${p.nome}</span><button onclick="excluir('produtos',${i})" class="text-red-900">X</button></div>`).join('');
+            document.getElementById('lista-usuarios-admin').innerHTML = db.usuarios.map((u, i) => `<tr class="border-b border-meth-900/20"><td class="p-4"><p class="font-bold text-white text-[10px]">${u.user}</p><p class="text-[9px] opacity-40">${u.email}</p></td><td class="p-4 text-meth-400 font-mono text-[10px] uppercase">${u.role}</td><td class="p-4 text-right">${u.user!=='admin'?`<button onclick="excluir('usuarios',${i})" class="text-red-900">EXPULSAR</button>`:''}</td></tr>`).join('');
+            
+            const f = db.pedidos.filter(p=>p.status==='Entregue').reduce((a,p)=>a+p.valor,0);
+            const d = db.despesas.reduce((a,d)=>a+d.valor,0);
+            document.getElementById('faturamento-val').innerText = `$ ${f.toLocaleString()}`;
+            document.getElementById('despesa-val').innerText = `$ ${d.toLocaleString()}`;
+            document.getElementById('lucro-val').innerText = `$ ${(f-d).toLocaleString()}`;
+        }
+
+        function atualizarGrafico() {
+            const f = db.pedidos.filter(p=>p.status==='Entregue').reduce((a,p)=>a+p.valor,0);
+            const d = db.despesas.reduce((a,d)=>a+d.valor,0);
+            const ctx = document.getElementById('chartFinanceiro').getContext('2d');
+            if(myChart) myChart.destroy();
+            myChart = new Chart(ctx, { type: 'doughnut', data: { labels: ['Vendas','Custos'], datasets:[{data:[f||1,d||0], backgroundColor:['#4ade80','#021a1a'], borderWidth:0}]}, options:{cutout:'85%', plugins:{legend:{display:false}}} });
+        }
+    </script>
+</body>
+</html>
